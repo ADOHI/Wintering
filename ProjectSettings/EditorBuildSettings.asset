@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Adohi/Titles/Scenes/TitleScene.unity
+    guid: caf72a0ce6fa9c241ae7c47cbb49e59c
+  - enabled: 1
+    path: Assets/Adohi/Ingames/Scenes/GameScene.unity
+    guid: ca157b541eb8d8449b3384f17195c428
   m_configObjects: {}
