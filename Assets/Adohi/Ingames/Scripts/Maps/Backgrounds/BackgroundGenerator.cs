@@ -8,16 +8,22 @@ namespace Ingames
     {
         public class BackgroundGenerator : MonoBehaviour
         {
-            public List<TreeData> treeObjectData;
             public Transform treeParent;
+            public List<TreeData> treeObjectData;
+            public Transform fogParent;
+            public List<FogData> fogObjectData;
+
+
             public ParallaxBackground backgroundParentPrefab;
-            public float minTreeInterval;
-            public float maxTreeInterval;
+
+            public float startBackgroundDepth;
+            public float backgroundDepthInterval;
 
 
             public void Generate()
             {
                 GenerateTrees();
+                GenerateFog();
             }
 
 
@@ -30,8 +36,8 @@ namespace Ingames
 
                 }
 
-                var layerAmount = treeObjectData.Count;
-
+                //var layerAmount = treeObjectData.Count;
+                var backgroundDepth = 0;
                 foreach (var treeData in treeObjectData)
                 {
                     var parent = Instantiate(backgroundParentPrefab);
@@ -56,26 +62,62 @@ namespace Ingames
 
                         var treeIndex = Random.Range(0, treeData.treePrefabs.Count);
 
+                        var isFlip = Random.Range(0, 2) == 0;
+
                         var spawnedTree = Instantiate(treeData.treePrefabs[treeIndex]);
 
                         spawnedTree.transform.SetParent(parent.transform);
 
-                        spawnedTree.transform.position = new Vector3(currentWidth, 0f, treeData.depth);
+                        spawnedTree.transform.position = new Vector3(currentWidth, 0f, startBackgroundDepth + backgroundDepth * backgroundDepthInterval);
 
                         spawnedTree.transform.localScale = scale;
 
-                        spawnedTree.GetComponent<SpriteRenderer>().color = treeData.overlayColor;
+                        var renderer = spawnedTree.GetComponent<SpriteRenderer>();
+
+                        renderer.color = treeData.overlayColor;
+
+                        renderer.flipX = isFlip;
 
                         spawnedTree.SetActive(true);
                     }
+
+                    backgroundDepth++;
                 }
             }
+
+            public void GenerateFog()
+            {
+                for (int i = fogParent.childCount - 1; i >= 0; i--)
+                {
+                    Destroy(fogParent.GetChild(i).gameObject);
+
+                }
+
+                //var layerAmount = treeObjectData.Count;
+                var backgroundDepth = 0;
+                foreach (var fogData in fogObjectData)
+                {
+
+
+                    var spawnedFog = Instantiate(fogData.fogPrefab);
+
+                    spawnedFog.transform.SetParent(fogParent.transform);
+
+                    var material = spawnedFog.GetComponent<SpriteRenderer>().material;
+
+                    spawnedFog.transform.position = new Vector3(0f, 0f, startBackgroundDepth + backgroundDepth * backgroundDepthInterval - 0.1f);
+
+                    spawnedFog.SetActive(true);
+
+                    backgroundDepth++;
+                }
+            }
+
         }
 
         [System.Serializable]
         public struct TreeData
         {
-            public int layerIndex;
             public List<GameObject> treePrefabs;
 
             public float minTreeInterval;
@@ -85,10 +127,13 @@ namespace Ingames
             public Vector3 maxTreeScale;
 
             public Color overlayColor;
-
-            public float depth;
-
             public float parallaxRatio;
+        }
+
+        [System.Serializable]
+        public struct FogData
+        {
+            public GameObject fogPrefab;
         }
 
     }
