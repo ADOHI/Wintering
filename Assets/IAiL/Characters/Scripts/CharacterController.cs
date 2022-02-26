@@ -51,8 +51,8 @@ public class CharacterController : MonoBehaviour
         // Landing Platform
         if(rigid.velocity.y <= 0)
         {
-            Debug.DrawRay(rigid.position, Vector2.down, new Color(0, 0.7f, 0));
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 0.7f, LayerMask.GetMask("Ground"));
+            Debug.DrawRay(rigid.position, Vector2.down, new Color(0, 1, 0));
+            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1, LayerMask.GetMask("Ground"));
             if (rayHit.collider != null)
             {
                 if (rayHit.distance < 0.5f)
@@ -64,14 +64,12 @@ public class CharacterController : MonoBehaviour
         if (isLadder)
         {
             float ver = Input.GetAxis("Vertical");
+            if (!(ver > 0))
+                return;
             rigid.gravityScale = 0;
             rigid.velocity = new Vector2(rigid.velocity.x, ver * moveSpeed);
             if (ver > 0)
                 anim.SetBool("isLaddering", true);
-            else
-            {
-                rigid.gravityScale = 4f;
-            }
         }
         else
         {
