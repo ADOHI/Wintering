@@ -22,7 +22,7 @@ namespace Ingames
         public Canvas ingameUICanvas;
 
         [Header("DayUI")]
-        public TextMeshPro dayUI;
+        public TextMeshProUGUI dayUI;
         public float minDilateValue = 0f;
         public float maxDilateValue = 0.15f;
         public float dayUIHideduration;
@@ -51,12 +51,19 @@ namespace Ingames
 
         public async void StartPreday()
         {
+            IngameCameraManager.Instance.ZoomInHoleImmediately();
+
             await UniTask.Delay(3000);
 
             foreground.DOFade(0f, duration);
             await UniTask.Delay(3000);
-            await IngameCameraManager.Instance.ZoomOutHoleAsnyc();
-            ShowTitleAsnyc();
+
+            IngameCameraManager.Instance.ZoomOutHoleAsnyc();
+
+            await ShowTitleAsnyc();
+            await HideTitleAsnyc();
+
+            StartDay();
         }
 
         public async UniTask ShowTitleAsnyc()
@@ -65,10 +72,17 @@ namespace Ingames
             await ShowDilateAsync(subTitle, minTitleDilate, maxTitleDilate, titleDuration);
         }
 
+        public async UniTask HideTitleAsnyc()
+        {
+            ShowDilateAsync(title, maxTitleDilate, minTitleDilate, titleDuration);
+            await ShowDilateAsync(subTitle, maxTitleDilate, minTitleDilate, titleDuration);
+        }
+
 
         public async UniTask StartDay()
         {
             days++;
+            IngameCameraManager.Instance.TrackCharacter();
             ShowDayUI(days).Forget();
         }
 
@@ -131,6 +145,18 @@ namespace Ingames
 
 
         public async UniTask ShowDilateAsync(TextMeshPro tmp, float fromValue, float toValue, float duration)
+        {
+            tmp.gameObject.SetActive(true);
+            for (float i = 0f; i < duration; i += Time.deltaTime)
+            {
+                var uiProgress = i / duration;
+                tmp.fontMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, DOVirtual.EasedValue(fromValue, toValue, uiProgress, dayUIease));
+                await UniTask.DelayFrame(1);
+            }
+            tmp.gameObject.SetActive(true);
+        }
+
+        public async UniTask ShowDilateAsync(TextMeshProUGUI tmp, float fromValue, float toValue, float duration)
         {
             tmp.gameObject.SetActive(true);
             for (float i = 0f; i < duration; i += Time.deltaTime)

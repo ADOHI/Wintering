@@ -44,6 +44,13 @@ namespace Ingames
             }
         }
 
+        public void ZoomInHoleImmediately()
+        {
+            var cameraOffset = Vector3.back * 10f;
+            camera.transform.position = zoomInPoint.position + cameraOffset;
+            camera.orthographicSize = zoomInValue;
+        }
+
         [Button]
         public async void ZoomInHole()
         {
@@ -65,7 +72,7 @@ namespace Ingames
             camera.DOOrthoSize(zoomOutValue, duration).SetEase(ease);
             await camera.transform.DOMove(zoomOutPoint.position + cameraOffset, duration).SetEase(ease).AsyncWaitForCompletion();
 
-            isTracking = true;
+            //isTracking = true;
         }
 
         [Button]
@@ -89,6 +96,11 @@ namespace Ingames
             camera.DOOrthoSize(zoomOutValue, duration).SetEase(ease);
             await camera.transform.DOMove(zoomOutPoint.position + cameraOffset, duration).SetEase(ease).AsyncWaitForCompletion();
 
+            //isTracking = true;
+        }
+
+        public void TrackCharacter()
+        {
             isTracking = true;
         }
     }
