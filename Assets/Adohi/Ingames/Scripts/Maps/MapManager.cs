@@ -10,6 +10,17 @@ namespace Ingames
         {
             public float mapWidth;
             public float mapHeight;
+
+            public BackgroundGenerator backgroundGenerator;
+
+
+            [Header("House")]
+            public float houseX;
+            public GameObject startPoint;
+            public void Spawn()
+            {
+                backgroundGenerator.Generate();
+            }
         }
     }
 }
