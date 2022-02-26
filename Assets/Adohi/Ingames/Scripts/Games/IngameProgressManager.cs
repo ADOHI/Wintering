@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityAtoms.BaseAtoms;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering.Universal;
+using UnityEngine.UI;
 
 namespace Ingames
 {
@@ -15,16 +17,24 @@ namespace Ingames
         private float dayProgress;
         private Camera camera;
 
+        [Header("AssignedObjects")]
+        public GameObjectReference character;
+
+        [Header("Settings")]
         public int maxDays = 5;
         public float daytime = 10f;
-        public int days;
+
+        [Header("envirionment")]
         public Gradient backgroundGradient;
+        public Light2D globalLight;
+        public Gradient lightGradient;
+        public Color endingLightColor;
+        
+        public int days;
         public Canvas ingameUICanvas;
 
         [Header("DayUI")]
         public TextMeshPro dayUI;
-        //public float minDilateValue = 0f;
-        //public float maxDilateValue = 0.15f;
         public float dayUIHideduration;
         //public Ease dayUIease;
 
@@ -35,7 +45,7 @@ namespace Ingames
         public SpriteRenderer foreground;
         public float duration;
 
-        [Header("Title")]
+        [Header("TitleUI")]
         public TextMeshPro title;
         public TextMeshPro subTitle;
         public float minTitleDilate;
@@ -46,6 +56,20 @@ namespace Ingames
         [Header("Death")]
         public float deathDelay = 15f;
 
+
+
+        [Header("Acorns")]
+        public int currentAcorn;
+        public int currentSavedAcorn;
+        public List<int> survivedAcornCondition;
+        public List<Image> acornUI;
+        public IntEventReference onEatAcorn;
+
+        [Header("Initialize")]
+        public Transform cameraStartPosition;
+        public float cameraStartOrthogonal;
+        public Transform startCharacterPosition;
+
         private void Awake()
         {
             camera = Camera.main;
@@ -53,28 +77,20 @@ namespace Ingames
 
         public async void StartPreday()
         {
-            //IngameCameraManager.Instance.ZoomInHoleImmediately();
+            InitializeDayStart();
 
             await UniTask.Delay(3000);
-
             SoundManager.Instance.PlayBGM();
-            ShowTitleAsnyc();
-
+            if (days == 1)
+            {
+                ShowTitleAsnyc();
+            }
+            else
+            {
+                ShowDayUI(days);
+            }
             await UniTask.Delay(2000);
             await foreground.DOFade(0f, duration).AsyncWaitForCompletion();
-            //await UniTask.Delay(15000);
-            //HideTitleAsnyc();
-            /*
-            IngameCameraManager.Instance.ZoomOutHoleAsnyc();
-
-            await ShowTitleAsnyc();
-            await HideTitleAsnyc();
-
-            StartDay();
-            */
-
-            //StartDay();
-
             DayTimeAsync();
         }
 
@@ -89,6 +105,15 @@ namespace Ingames
             subTitle.gameObject.SetActive(false);
         }
 
+        public async UniTask ShowDayUI(int day)
+        {
+            dayUI.text = $"DAY {day}";
+            dayUI.gameObject.SetActive(true);
+            await UniTask.Delay(15000);
+            dayUI.gameObject.SetActive(false);
+        }
+
+        /*
         public async UniTask HideTitleAsnyc()
         {
             //ShowDilateAsync(title, maxTitleDilate, minTitleDilate, titleDuration);
@@ -96,14 +121,19 @@ namespace Ingames
             title.gameObject.SetActive(false);
             subTitle.gameObject.SetActive(false);
         }
-
+        */
 
         public async UniTask StartDay()
         {
-            days++;
+            //days++;
             IngameCameraManager.Instance.TrackCharacter();
-            //ShowDayUI(days).Forget();
             Debug.Log($"Day {days}: Start");
+            /*
+            if (days >= 2)
+            {
+                ShowDayUI(days).Forget();
+            }
+            */
             //await Da&yTimeAsync();
         }
 
@@ -114,11 +144,12 @@ namespace Ingames
             {
                 dayProgress = i / daytime;
                 camera.backgroundColor = backgroundGradient.Evaluate(dayProgress);
+                globalLight.color = lightGradient.Evaluate(dayProgress);
                 await UniTask.DelayFrame(1);
             }
             dayProgress = 1f;
 
-            await EndDay(false);
+            await EndDay(true);
         }
 
         public async UniTask EndDay(bool isSuccess)
@@ -126,6 +157,33 @@ namespace Ingames
             if (isSuccess)
             {
 
+
+                SoundManager.Instance.StopBGM();
+                //ShowTitleAsnyc();
+                await UniTask.Delay(2000);
+                await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
+
+                currentSavedAcorn += currentAcorn;
+                
+                if (currentSavedAcorn < survivedAcornCondition[days-1])
+                {
+                    DieAtHomeAsync();
+                    return;
+                }
+
+                days++;
+
+
+                if (days < maxDays)
+                {
+                    StartPreday();
+
+                }
+
+                else
+                {
+                    
+                }
             }
 
             else
@@ -153,31 +211,58 @@ namespace Ingames
             //await GameManager.Instance.EndGameAsync();
         }
 
-
-
-        public async UniTask ShowDayUI(int day)
+        [Button]
+        public async UniTask DieAtHomeAsync()
         {
-            dayUI.text = $"DAY {day}";
-            dayUI.gameObject.SetActive(true);
-            //dayUI.gameObject.SetActive(true);
-            await UniTask.Delay(15000);
-            //title.gameObject.SetActive(false);
-            dayUI.gameObject.SetActive(false);
-            /*
-            dayUI.text = $"DAY {day}";
-            dayUI.gameObject.SetActive(true);
-            for (float i = 0f; i < dayUIHideduration; i += Time.deltaTime)
-            {
-                var uiProgress = i / dayUIHideduration;
-                dayUI.fontMaterial.SetFloat(ShaderUtilities.ID_FaceDilate, DOVirtual.EasedValue(maxDilateValue, minDilateValue, uiProgress, dayUIease));
-                await UniTask.DelayFrame(1);
-            }
-            dayUI.gameObject.SetActive(true);
-            */
-            //await ShowDilateAsync(dayUI, -1f, maxDilateValue, dayUIHideduration);
+            Debug.Log("Die");
+            onDie?.Event?.Raise();
+            SoundManager.Instance.StopBGM();
+            await UniTask.Delay(3000);
+            SoundManager.Instance.PlayDieBGM();
+            //Á×´Â ¿¬Ãâ
+            await UniTask.Delay((int)(deathDelay * 1000f));
+            Debug.Log("Fin");
+            onFin?.Event?.Raise();
+
+            await GameManager.Instance.EndGameAsync();
+            //await GameManager.Instance.EndGameAsync();
+        }
+
+        private void InitializeDayStart()
+        {
+            character.Value.transform.position = startCharacterPosition.position;
+            camera.backgroundColor = backgroundGradient.Evaluate(0f);
+            globalLight.color = lightGradient.Evaluate(0f);
+            IngameCameraManager.Instance.TrackCharacter(false);
+            IngameCameraManager.Instance.SetCameraPosision(cameraStartPosition.position, cameraStartOrthogonal);
         }
 
 
+        public async UniTask StartEndingAsync()
+        {
+
+        }
+
+        public async void ShowAcornUI(int nextAcornCount)
+        {
+            foreach (var ui in acornUI)
+            {
+                ui.enabled = false;
+            }
+
+            acornUI[nextAcornCount].enabled = true;
+
+            await UniTask.Delay(1000);
+
+            //currentAcorn++;
+
+            acornUI[nextAcornCount + 1].enabled = true;
+            acornUI[currentAcorn].enabled = false;
+
+            await UniTask.Delay(1000);
+
+            acornUI[currentAcorn + 1].enabled = false;
+        }
         /*
         public async UniTask ShowDilateAsync(TextMeshPro tmp, float fromValue, float toValue, float duration)
         {
@@ -203,6 +288,20 @@ namespace Ingames
             tmp.gameObject.SetActive(true);
         }
         */
+        /*
+        [Button]
+        public async void EatAcorn()
+        {
+           
+
+            if (currentAcorn == 5)
+            {
+                currentAcorn--;
+            }
+            //onEatAcorn?.Event?.Raise(currentAcorn);
+        }
+        */
+
     }
 
 }

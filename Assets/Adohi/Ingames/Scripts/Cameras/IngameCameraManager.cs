@@ -4,6 +4,7 @@ using Pixelplacement;
 using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
+using UnityAtoms.BaseAtoms;
 using UnityEngine;
 
 namespace Ingames
@@ -21,6 +22,10 @@ namespace Ingames
         public float trackLerpValue;
         public bool isTracking;
 
+        [Header("HeightLeap")]
+        public float distanceMultiply;
+        public FloatReference height;
+        public BoolReference isLaddering;
 
         [Header("House")]
         public Transform zoomInPoint;
@@ -39,7 +44,14 @@ namespace Ingames
         {
             if (isTracking)
             {
-                camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, trackingDistance, Time.deltaTime * trackDistanceLerpValue);
+                var targetDistance = trackingDistance;
+
+                if (isLaddering)
+                {
+                    targetDistance += height * distanceMultiply;
+                }
+
+                camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, targetDistance, Time.deltaTime * trackDistanceLerpValue);
                 camera.transform.position = Vector3.Lerp(camera.transform.position, character.transform.position + cameraOffset, Time.deltaTime * trackLerpValue);
             }
         }
@@ -99,9 +111,15 @@ namespace Ingames
             //isTracking = true;
         }
 
-        public void TrackCharacter()
+        public void SetCameraPosision(Vector3 target, float orthogonal)
         {
-            isTracking = true;
+            camera.transform.position = new Vector3(target.x, target.y, -10f);
+            camera.orthographicSize = orthogonal;
+        }
+
+        public void TrackCharacter(bool isTrack = true)
+        {
+            isTracking = isTrack;
         }
     }
 

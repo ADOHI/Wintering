@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityAtoms.BaseAtoms;
 using UnityEngine;
 
 public class CharacterController : MonoBehaviour
 {
+    public BoolReference isLaddering;
+    public FloatReference groundHeight;
+
     public float moveSpeed;
     public float maxSpeed;
     public float jumpPower;
@@ -48,11 +52,13 @@ public class CharacterController : MonoBehaviour
     {
         CharacterMove();    // 캐릭터 움직임
 
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1, LayerMask.GetMask("Ground"));
+        groundHeight.Value = rayHit.distance;
+
         // Landing Platform
-        if(rigid.velocity.y <= 0)
+        if (rigid.velocity.y <= 0)
         {
             Debug.DrawRay(rigid.position, Vector2.down, new Color(0, 1, 0));
-            RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1, LayerMask.GetMask("Ground"));
             if (rayHit.collider != null)
             {
                 if (rayHit.distance < 0.5f)
@@ -60,9 +66,12 @@ public class CharacterController : MonoBehaviour
             }
         }
 
+        isLaddering.Value = isLadder;
+
         // 사다리 타기
         if (isLadder)
         {
+
             float ver = Input.GetAxis("Vertical");
             if (!(ver > 0))
                 return;

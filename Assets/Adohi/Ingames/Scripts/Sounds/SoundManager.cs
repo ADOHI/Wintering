@@ -23,7 +23,7 @@ namespace Ingames
         {
             //idleBackgroundMusic.volume = 0f;
             //idleBackgroundMusic.Play();
-            Fade(idleBackgroundMusic, 0f, bgmFadeDuration);
+            Fade(idleBackgroundMusic, 0f, bgmFadeDuration, true);
         }
 
         public void PlayDieBGM()
@@ -37,13 +37,20 @@ namespace Ingames
         {
             //dieBackgroundMusic.volume = 0f;
             //dieBackgroundMusic.Play();
-            Fade(dieBackgroundMusic, 0f, bgmFadeDuration);
+            Fade(dieBackgroundMusic, 0f, bgmFadeDuration, true);
         }
 
 
-        public void Fade(AudioSource audioSource, float fadeValue, float fadeDuration)
+        public void Fade(AudioSource audioSource, float fadeValue, float fadeDuration, bool isStop = false)
         {
-            audioSource.DOFade(fadeValue, fadeDuration);
+            if (isStop)
+            {
+                audioSource.DOFade(fadeValue, fadeDuration).OnComplete(audioSource.Stop);
+            }
+            else
+            {
+                audioSource.DOFade(fadeValue, fadeDuration);
+            }
         }
     }
 
