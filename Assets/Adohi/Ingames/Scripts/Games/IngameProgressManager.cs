@@ -22,13 +22,14 @@ namespace Ingames
         public Canvas ingameUICanvas;
 
         [Header("DayUI")]
-        public TextMeshProUGUI dayUI;
-        public float minDilateValue = 0f;
-        public float maxDilateValue = 0.15f;
+        public TextMeshPro dayUI;
+        //public float minDilateValue = 0f;
+        //public float maxDilateValue = 0.15f;
         public float dayUIHideduration;
-        public Ease dayUIease;
+        //public Ease dayUIease;
 
         public VoidBaseEventReference onDie;
+        public VoidBaseEventReference onFin;
 
         [Header("ForegroundSprite")]
         public SpriteRenderer foreground;
@@ -41,8 +42,9 @@ namespace Ingames
         public float maxTitleDilate;
         public float titleDuration;
         public Ease titleEase;
-        //[Header("PreGameSetting")]
 
+        [Header("Death")]
+        public float deathDelay = 15f;
 
         private void Awake()
         {
@@ -51,31 +53,48 @@ namespace Ingames
 
         public async void StartPreday()
         {
-            IngameCameraManager.Instance.ZoomInHoleImmediately();
+            //IngameCameraManager.Instance.ZoomInHoleImmediately();
 
             await UniTask.Delay(3000);
 
-            foreground.DOFade(0f, duration);
-            await UniTask.Delay(3000);
+            SoundManager.Instance.PlayBGM();
+            ShowTitleAsnyc();
 
+            await UniTask.Delay(2000);
+            await foreground.DOFade(0f, duration).AsyncWaitForCompletion();
+            //await UniTask.Delay(15000);
+            //HideTitleAsnyc();
+            /*
             IngameCameraManager.Instance.ZoomOutHoleAsnyc();
 
             await ShowTitleAsnyc();
             await HideTitleAsnyc();
 
             StartDay();
+            */
+
+            //StartDay();
+
+            DayTimeAsync();
         }
 
         public async UniTask ShowTitleAsnyc()
         {
-            ShowDilateAsync(title, minTitleDilate, maxTitleDilate, titleDuration);
-            await ShowDilateAsync(subTitle, minTitleDilate, maxTitleDilate, titleDuration);
+            //ShowDilateAsync(title, minTitleDilate, maxTitleDilate, titleDuration);
+            //await ShowDilateAsync(subTitle, minTitleDilate, maxTitleDilate, titleDuration);
+            title.gameObject.SetActive(true);
+            subTitle.gameObject.SetActive(true);
+            await UniTask.Delay(15000);
+            title.gameObject.SetActive(false);
+            subTitle.gameObject.SetActive(false);
         }
 
         public async UniTask HideTitleAsnyc()
         {
-            ShowDilateAsync(title, maxTitleDilate, minTitleDilate, titleDuration);
-            await ShowDilateAsync(subTitle, maxTitleDilate, minTitleDilate, titleDuration);
+            //ShowDilateAsync(title, maxTitleDilate, minTitleDilate, titleDuration);
+            //await ShowDilateAsync(subTitle, maxTitleDilate, minTitleDilate, titleDuration);
+            title.gameObject.SetActive(false);
+            subTitle.gameObject.SetActive(false);
         }
 
 
@@ -83,7 +102,9 @@ namespace Ingames
         {
             days++;
             IngameCameraManager.Instance.TrackCharacter();
-            ShowDayUI(days).Forget();
+            //ShowDayUI(days).Forget();
+            Debug.Log($"Day {days}: Start");
+            //await Da&yTimeAsync();
         }
 
         public async UniTask DayTimeAsync()
@@ -109,26 +130,39 @@ namespace Ingames
 
             else
             {
-                onDie?.Event?.Raise();
-                //ingameUICanvas.gameObject.SetActive(false);
-                
+                DieAsync();
+                //onDie?.Event?.Raise();
+                //ingameUICanvas.gameObject.SetActive(false);           
             }
         }
 
         [Button]
         public async UniTask DieAsync()
         {
+            Debug.Log("Die");
             onDie?.Event?.Raise();
-
+            SoundManager.Instance.StopBGM();
+            await UniTask.Delay(3000);
+            SoundManager.Instance.PlayDieBGM();
             //Á×´Â ¿¬Ãâ
-
-            await UniTask.Delay(5000);
+            await UniTask.Delay((int)(deathDelay * 1000f));
+            Debug.Log("Fin");
+            onFin?.Event?.Raise();
 
             await GameManager.Instance.EndGameAsync();
+            //await GameManager.Instance.EndGameAsync();
         }
+
+
 
         public async UniTask ShowDayUI(int day)
         {
+            dayUI.text = $"DAY {day}";
+            dayUI.gameObject.SetActive(true);
+            //dayUI.gameObject.SetActive(true);
+            await UniTask.Delay(15000);
+            //title.gameObject.SetActive(false);
+            dayUI.gameObject.SetActive(false);
             /*
             dayUI.text = $"DAY {day}";
             dayUI.gameObject.SetActive(true);
@@ -140,10 +174,11 @@ namespace Ingames
             }
             dayUI.gameObject.SetActive(true);
             */
-            await ShowDilateAsync(dayUI, -1f, maxDilateValue, dayUIHideduration);
+            //await ShowDilateAsync(dayUI, -1f, maxDilateValue, dayUIHideduration);
         }
 
 
+        /*
         public async UniTask ShowDilateAsync(TextMeshPro tmp, float fromValue, float toValue, float duration)
         {
             tmp.gameObject.SetActive(true);
@@ -167,6 +202,7 @@ namespace Ingames
             }
             tmp.gameObject.SetActive(true);
         }
+        */
     }
 
 }

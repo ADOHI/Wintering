@@ -14,6 +14,7 @@ namespace Ingames
         public VoidBaseEventReference OnGamePrepared;
         public VoidBaseEventReference OnGameEnd;
         public string titleSceneName = "TitleScene";
+        public string endSceneName = "EndScene";
 
 
 
@@ -36,12 +37,11 @@ namespace Ingames
             await UniTask.Delay(2000);
             OnGamePrepared?.Event?.Raise();
         }
-
         
         public async UniTask EndGameAsync()
         {
             OnGameEnd.Event.Raise();
-            await SceneManager.LoadSceneAsync(titleSceneName);
+            await SceneManager.LoadSceneAsync(endSceneName);
         }
 
 

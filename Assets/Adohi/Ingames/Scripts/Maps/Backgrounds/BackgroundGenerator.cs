@@ -44,7 +44,7 @@ namespace Ingames
 
                     parent.transform.SetParent(treeParent);
 
-                    var currentWidth = 0f;
+                    var currentWidth = -MapManager.Instance.mapWidth * 0.5f;
 
                     parent.camera = Camera.main;
 
@@ -52,7 +52,7 @@ namespace Ingames
 
                     parent.gameObject.SetActive(true);
 
-                    while (currentWidth < MapManager.Instance.mapWidth)
+                    while (currentWidth < MapManager.Instance.mapWidth * 0.5f)
                     {
                         var width = Random.Range(treeData.minTreeInterval, treeData.maxTreeInterval);
 
