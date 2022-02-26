@@ -52,7 +52,7 @@ public class CharacterController : MonoBehaviour
     {
         CharacterMove();    // 캐릭터 움직임
 
-        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 1, LayerMask.GetMask("Ground"));
+        RaycastHit2D rayHit = Physics2D.Raycast(rigid.position, Vector2.down, 100f, LayerMask.GetMask("Ground"));
         groundHeight.Value = rayHit.distance;
 
         // Landing Platform
