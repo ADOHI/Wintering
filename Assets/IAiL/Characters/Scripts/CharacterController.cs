@@ -1,3 +1,4 @@
+using Ingames;
 using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using UnityEngine;
 public class CharacterController : MonoBehaviour
 {
     [ShowInInspector]
-    private bool isControllable;
+    public bool isControllable;
     public BoolEventReference onControllable;
 
 
@@ -73,11 +74,22 @@ public class CharacterController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (IsGround() && Mathf.Abs(rigid.velocity.x) > 0.1f)
+        {
+            SoundManager.Instance.PlaySFX(0);
+        }
+        else
+        {
+            SoundManager.Instance.StopSFX(0);
+
+        }
+
         if (!isControllable)
         {
             rigid.velocity.Set(0f, rigid.velocity.y);
             isLaddering.Value = false;
             rigid.gravityScale = 4f;
+            
             return;
         }
 
@@ -105,6 +117,7 @@ public class CharacterController : MonoBehaviour
             float ver = Input.GetAxis("Vertical");
             if (!(ver > 0) || staminaPoint <= 0f)
             {
+                SoundManager.Instance.StopSFX(1);
 
                 Debug.Log("Slide");
                 rigid.gravityScale = 0.5f;
@@ -124,9 +137,12 @@ public class CharacterController : MonoBehaviour
                 rigid.gravityScale = 0;
                 rigid.velocity = new Vector2(rigid.velocity.x, ver * moveSpeed);
                 if (ver > 0)
+                {
                     anim.SetBool("isLaddering", true);
+                    staminaPoint.Value = Mathf.Clamp(staminaPoint.Value - staminaSpendSpeed * Time.fixedDeltaTime, 0f, 1f);
+                    SoundManager.Instance.PlaySFX(1);
+                }
 
-                staminaPoint.Value = Mathf.Clamp(staminaPoint.Value - staminaSpendSpeed * Time.fixedDeltaTime, 0f, 1f);
             }
 
 
@@ -136,7 +152,11 @@ public class CharacterController : MonoBehaviour
             rigid.gravityScale = 4f;
             anim.SetBool("isLaddering", false);
             staminaPoint.Value = Mathf.Clamp(staminaPoint.Value + staminaRecoverySpeed * Time.fixedDeltaTime, 0f, 1f);
+            SoundManager.Instance.StopSFX(1);
+
         }
+
+
     }
 
     // 캐릭터 움직임
@@ -185,6 +205,12 @@ public class CharacterController : MonoBehaviour
         //isControllable = true;
         rigid.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
+
+    public void DoFinal()
+    {
+        anim.SetBool("isFinal", true);
+    }
+
     // 사다리 접촉 여부
     public bool isLadder;
     void OnTriggerEnter2D(Collider2D collision)

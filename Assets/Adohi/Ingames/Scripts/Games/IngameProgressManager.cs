@@ -18,7 +18,7 @@ namespace Ingames
         private Camera camera;
 
         public bool isHoleTriggered;
-
+        public bool isOnGamePlaying;
         [Header("AssignedObjects")]
         public GameObjectReference character;
 
@@ -49,6 +49,7 @@ namespace Ingames
         [Header("TitleUI")]
         public TextMeshPro title;
         public TextMeshPro subTitle;
+        public GameObject steps;
         public float minTitleDilate;
         public float maxTitleDilate;
         public float titleDuration;
@@ -138,6 +139,7 @@ namespace Ingames
             //days++;
             IngameCameraManager.Instance.TrackCharacter();
             onDayStart.Event.Raise();
+            isOnGamePlaying = true;
             Debug.Log($"Day {days}: Start");
         }
 
@@ -151,6 +153,7 @@ namespace Ingames
                 globalLight.color = lightGradient.Evaluate(dayProgress);
                 if (isHoleTriggered)
                 {
+                    isOnGamePlaying = false;
                     await EndDay(true);
                     return;
                 }
@@ -158,6 +161,7 @@ namespace Ingames
                 await UniTask.DelayFrame(1);
             }
             dayProgress = 1f;
+            isOnGamePlaying = false;
             await EndDay(false);
         }
 
@@ -286,12 +290,25 @@ namespace Ingames
             SoundManager.Instance.PlayBGM(3);
             await foreground.DOFade(0f, duration).OnUpdate(() => pointLight.pointLightInnerRadius += (maxRadius - minRadius) / duration * Time.deltaTime).AsyncWaitForCompletion();
 
-            SoundManager.Instance.StopBGM();
             await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
+            SoundManager.Instance.StopBGM();
 
             character.Value.transform.position = endingOutsideHomeWaypoint.position;
+            title.gameObject.SetActive(true);
+            subTitle.gameObject.SetActive(true);
+            steps.gameObject.SetActive(true);
+            title.transform.position = new Vector3(title.transform.position.x, 11.1f, title.transform.position.z);
+            var renderer = character.Value.GetComponent<SpriteRenderer>();
+            renderer.flipX = false;
+            renderer.enabled = false;
+            IngameCameraManager.Instance.ZoomInHoleImmediately();
+            await foreground.DOFade(0f, duration).AsyncWaitForCompletion();
+            renderer.enabled = true;
             onStartFinalEnding?.Event?.Raise();
 
+            SoundManager.Instance.PlayBGM(4);
+
+            await IngameCameraManager.Instance.ZoomOutHoleAsnyc();
         }
 
         public async void ShowAcornUI(int nextAcornCount)

@@ -18,7 +18,9 @@ namespace Ingames
             {
                 currentAcornCount++;
                 onEatAcorn.Event.Raise(currentAcornCount);
+                SoundManager.Instance.PlaySFX(2);
                 await acorn.Eated(eatingDelay);
+                SoundManager.Instance.StopSFX(2);
                 onEatAcornEnd.Event.Raise();
             }
         }

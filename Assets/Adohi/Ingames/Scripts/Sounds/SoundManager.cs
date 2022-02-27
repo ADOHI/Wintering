@@ -14,6 +14,7 @@ namespace Ingames
 
 
         public List<AudioSource> bgms;
+        public List<AudioSource> sfxs;
 
         /*
         public void PlayBGM()
@@ -62,6 +63,27 @@ namespace Ingames
                 {
                     Fade(bgm, 0f, bgmFadeDuration, true);
                 }
+            }
+            //var bgm = bgms[index];
+
+        }
+
+        public void PlaySFX(int index)
+        {
+            var sfx = sfxs[index];
+            if (!sfx.isPlaying)
+            {
+                sfx.Play();
+            }
+        }
+
+        public void StopSFX(int index)
+        {
+
+            var sfx = sfxs[index];
+            if (sfx.isPlaying)
+            {
+                sfx.Stop();
             }
             //var bgm = bgms[index];
 
