@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Adohi/Ingames/Scenes/GameScene.unity
     guid: ca157b541eb8d8449b3384f17195c428
+  - enabled: 1
+    path: Assets/Adohi/Ingames/Scenes/EndScene.unity
+    guid: eec6be8c41a2261409f9d0e5775372bf
   m_configObjects: {}
