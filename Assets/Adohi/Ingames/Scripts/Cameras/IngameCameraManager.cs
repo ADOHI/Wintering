@@ -24,6 +24,7 @@ namespace Ingames
 
         [Header("HeightLeap")]
         public float distanceMultiply;
+        public float minHeight = 1f;
         public FloatReference height;
         public BoolReference isLaddering;
 
@@ -48,7 +49,8 @@ namespace Ingames
 
                 if (isLaddering)
                 {
-                    targetDistance += height * distanceMultiply;
+                    var clampedHeight = Mathf.Clamp(height - minHeight, 0f, height);
+                    targetDistance += clampedHeight * distanceMultiply; 
                 }
 
                 camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, targetDistance, Time.deltaTime * trackDistanceLerpValue);

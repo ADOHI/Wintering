@@ -17,12 +17,15 @@ namespace Ingames
         private float dayProgress;
         private Camera camera;
 
+        public bool isHoleTriggered;
+
         [Header("AssignedObjects")]
         public GameObjectReference character;
 
         [Header("Settings")]
         public int maxDays = 5;
         public float daytime = 10f;
+        public int maxAcornCount = 4;
 
         [Header("envirionment")]
         public Gradient backgroundGradient;
@@ -38,8 +41,6 @@ namespace Ingames
         public float dayUIHideduration;
         //public Ease dayUIease;
 
-        public VoidBaseEventReference onDie;
-        public VoidBaseEventReference onFin;
 
         [Header("ForegroundSprite")]
         public SpriteRenderer foreground;
@@ -56,19 +57,36 @@ namespace Ingames
         [Header("Death")]
         public float deathDelay = 15f;
 
-
-
         [Header("Acorns")]
         public int currentAcorn;
         public int currentSavedAcorn;
         public List<int> survivedAcornCondition;
         public List<Image> acornUI;
-        public IntEventReference onEatAcorn;
 
         [Header("Initialize")]
         public Transform cameraStartPosition;
         public float cameraStartOrthogonal;
         public Transform startCharacterPosition;
+
+        [Header("Events")]
+        public IntEventReference onEatAcorn;
+        public VoidBaseEventReference onDayStart;
+        public VoidBaseEventReference onDayEnd;
+        public VoidBaseEventReference onDie;
+        public VoidBaseEventReference onSurvived;
+        public VoidBaseEventReference onStartEnding;
+        public VoidBaseEventReference onFin;
+        public VoidBaseEventReference onInitializeDay;
+
+        [Header("Home")]
+        public Transform insideHomeWaypoint;
+
+        [Header("Ending")]
+        public Light2D pointLight;
+        public float minRadius;
+        public float maxRadius;
+        public Color endingSkyColor;
+        public Color endingGlobalLightColor;
 
         private void Awake()
         {
@@ -113,28 +131,12 @@ namespace Ingames
             dayUI.gameObject.SetActive(false);
         }
 
-        /*
-        public async UniTask HideTitleAsnyc()
-        {
-            //ShowDilateAsync(title, maxTitleDilate, minTitleDilate, titleDuration);
-            //await ShowDilateAsync(subTitle, maxTitleDilate, minTitleDilate, titleDuration);
-            title.gameObject.SetActive(false);
-            subTitle.gameObject.SetActive(false);
-        }
-        */
-
         public async UniTask StartDay()
         {
             //days++;
             IngameCameraManager.Instance.TrackCharacter();
+            onDayStart.Event.Raise();
             Debug.Log($"Day {days}: Start");
-            /*
-            if (days >= 2)
-            {
-                ShowDayUI(days).Forget();
-            }
-            */
-            //await Da&yTimeAsync();
         }
 
         public async UniTask DayTimeAsync()
@@ -145,35 +147,51 @@ namespace Ingames
                 dayProgress = i / daytime;
                 camera.backgroundColor = backgroundGradient.Evaluate(dayProgress);
                 globalLight.color = lightGradient.Evaluate(dayProgress);
+                if (isHoleTriggered)
+                {
+                    await EndDay(true);
+                    return;
+                }
+                
                 await UniTask.DelayFrame(1);
             }
             dayProgress = 1f;
-
-            await EndDay(true);
+            await EndDay(false);
         }
 
         public async UniTask EndDay(bool isSuccess)
         {
+            onDayEnd.Event.Raise();
+;
             if (isSuccess)
             {
-
-
                 SoundManager.Instance.StopBGM();
                 //ShowTitleAsnyc();
                 await UniTask.Delay(2000);
-                await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
-
+                await foreground.DOFade(1f, 3f).AsyncWaitForCompletion();
+                camera.backgroundColor = backgroundGradient.Evaluate(1f);
+                globalLight.color = lightGradient.Evaluate(1f);
                 currentSavedAcorn += currentAcorn;
-                
+                ShowHomeInside();
+                await foreground.DOFade(0f, 3f).AsyncWaitForCompletion();
+
+
+
+                //Acorn is lack
                 if (currentSavedAcorn < survivedAcornCondition[days-1])
                 {
                     DieAtHomeAsync();
                     return;
                 }
+                else
+                {
+                    onSurvived.Event.Raise();
+                    await UniTask.Delay(3000);
+                    await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
+                }
+
 
                 days++;
-
-
                 if (days < maxDays)
                 {
                     StartPreday();
@@ -182,7 +200,7 @@ namespace Ingames
 
                 else
                 {
-                    
+                    StartEndingAsync();
                 }
             }
 
@@ -193,6 +211,15 @@ namespace Ingames
                 //ingameUICanvas.gameObject.SetActive(false);           
             }
         }
+
+        public void ShowHomeInside()
+        {
+            var offset = Vector3.up * 2.3f;
+            IngameCameraManager.Instance.TrackCharacter(false);
+            character.Value.transform.position = insideHomeWaypoint.position;
+            IngameCameraManager.Instance.SetCameraPosision(insideHomeWaypoint.position + offset, 4.5f);
+        }
+
 
         [Button]
         public async UniTask DieAsync()
@@ -235,33 +262,44 @@ namespace Ingames
             globalLight.color = lightGradient.Evaluate(0f);
             IngameCameraManager.Instance.TrackCharacter(false);
             IngameCameraManager.Instance.SetCameraPosision(cameraStartPosition.position, cameraStartOrthogonal);
+            isHoleTriggered = false;
+            currentAcorn = 0;
+            onInitializeDay.Event.Raise();
         }
 
 
         public async UniTask StartEndingAsync()
         {
+            Debug.Log("StartEnding");
+            onStartEnding?.Event?.Raise();
+            camera.backgroundColor = endingSkyColor;
+            globalLight.color = endingLightColor;
 
+            pointLight.pointLightInnerRadius = minRadius;
+            await foreground.DOFade(0f, duration).OnUpdate(() => pointLight.pointLightInnerRadius += (maxRadius - minRadius) / duration * Time.deltaTime).AsyncWaitForCompletion();
         }
 
         public async void ShowAcornUI(int nextAcornCount)
         {
+            currentAcorn = nextAcornCount;
+
             foreach (var ui in acornUI)
             {
                 ui.enabled = false;
             }
 
-            acornUI[nextAcornCount].enabled = true;
+            acornUI[nextAcornCount - 1].enabled = true;
 
             await UniTask.Delay(1000);
 
             //currentAcorn++;
 
-            acornUI[nextAcornCount + 1].enabled = true;
-            acornUI[currentAcorn].enabled = false;
+            acornUI[nextAcornCount].enabled = true;
+            acornUI[nextAcornCount - 1].enabled = false;
 
             await UniTask.Delay(1000);
 
-            acornUI[currentAcorn + 1].enabled = false;
+            acornUI[nextAcornCount].enabled = false;
         }
         /*
         public async UniTask ShowDilateAsync(TextMeshPro tmp, float fromValue, float toValue, float duration)
@@ -301,7 +339,10 @@ namespace Ingames
             //onEatAcorn?.Event?.Raise(currentAcorn);
         }
         */
-
+        public void GoInside()
+        {
+            isHoleTriggered = true;
+        }
     }
 
 }
