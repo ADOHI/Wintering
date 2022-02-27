@@ -194,6 +194,7 @@ namespace Ingames
                 }
                 else
                 {
+                    currentSavedAcorn -= survivedAcornCondition[days - 1];
                     onSurvived.Event.Raise();
                     await UniTask.Delay(3000);
                     SoundManager.Instance.StopBGM();
@@ -290,7 +291,11 @@ namespace Ingames
             SoundManager.Instance.PlayBGM(3);
             await foreground.DOFade(0f, duration).OnUpdate(() => pointLight.pointLightInnerRadius += (maxRadius - minRadius) / duration * Time.deltaTime).AsyncWaitForCompletion();
 
+            character.Value.GetComponent<CharacterController>().Sleep(false);
+
             await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
+
+
             SoundManager.Instance.StopBGM();
 
             character.Value.transform.position = endingOutsideHomeWaypoint.position;

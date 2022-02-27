@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class CharacterController : MonoBehaviour
 {
+    private bool climbing;
+
     [ShowInInspector]
     public bool isControllable;
     public BoolEventReference onControllable;
@@ -104,7 +106,7 @@ public class CharacterController : MonoBehaviour
             Debug.DrawRay(rigid.position, Vector2.down, new Color(0, 1, 0));
             if (rayHit.collider != null)
             {
-                if (rayHit.distance < 0.5f)
+                if (rayHit.distance < 0.8f)
                     anim.SetBool("isJumping", false);
             }
         }
@@ -119,14 +121,19 @@ public class CharacterController : MonoBehaviour
             {
                 SoundManager.Instance.StopSFX(1);
 
-                Debug.Log("Slide");
-                rigid.gravityScale = 0.5f;
+                if (climbing)
+                {
+                    Debug.Log("Slide");
+                    rigid.gravityScale = 0.5f;
+                }
+ 
 
                 if (IsGround())
                 {
                     //rigid.gravityScale = 4f;
                     anim.SetBool("isLaddering", false);
                     staminaPoint.Value = Mathf.Clamp(staminaPoint.Value + staminaRecoverySpeed * Time.fixedDeltaTime, 0f, 1f);
+                    climbing = false;
                 }
 
                 return;
@@ -138,6 +145,7 @@ public class CharacterController : MonoBehaviour
                 rigid.velocity = new Vector2(rigid.velocity.x, ver * moveSpeed);
                 if (ver > 0)
                 {
+                    climbing = true;
                     anim.SetBool("isLaddering", true);
                     staminaPoint.Value = Mathf.Clamp(staminaPoint.Value - staminaSpendSpeed * Time.fixedDeltaTime, 0f, 1f);
                     SoundManager.Instance.PlaySFX(1);
@@ -153,6 +161,7 @@ public class CharacterController : MonoBehaviour
             anim.SetBool("isLaddering", false);
             staminaPoint.Value = Mathf.Clamp(staminaPoint.Value + staminaRecoverySpeed * Time.fixedDeltaTime, 0f, 1f);
             SoundManager.Instance.StopSFX(1);
+            climbing = false;
 
         }
 

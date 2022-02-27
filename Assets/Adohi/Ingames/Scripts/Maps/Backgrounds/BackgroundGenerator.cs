@@ -90,6 +90,12 @@ namespace Ingames
 
                     backgroundDepth++;
                 }
+
+                for(int i = treeParent.childCount - 1; i >= 0; i--)
+                {
+                    treeParent.GetChild(i).position += Vector3.up * 2f;
+
+                }
             }
 
             public void GenerateFog()
@@ -126,6 +132,7 @@ namespace Ingames
         public struct TreeData
         {
             public List<GameObject> treePrefabs;
+            public GameObject groundPrefab;
 
             public float minTreeInterval;
             public float maxTreeInterval;
