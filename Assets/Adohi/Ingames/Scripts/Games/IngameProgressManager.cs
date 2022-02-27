@@ -75,11 +75,13 @@ namespace Ingames
         public VoidBaseEventReference onDie;
         public VoidBaseEventReference onSurvived;
         public VoidBaseEventReference onStartEnding;
+        public VoidBaseEventReference onStartFinalEnding;
         public VoidBaseEventReference onFin;
         public VoidBaseEventReference onInitializeDay;
 
         [Header("Home")]
         public Transform insideHomeWaypoint;
+        public Transform endingOutsideHomeWaypoint;
 
         [Header("Ending")]
         public Light2D pointLight;
@@ -98,7 +100,7 @@ namespace Ingames
             InitializeDayStart();
 
             await UniTask.Delay(3000);
-            SoundManager.Instance.PlayBGM();
+            SoundManager.Instance.PlayBGM(0);
             if (days == 1)
             {
                 ShowTitleAsnyc();
@@ -172,6 +174,9 @@ namespace Ingames
                 camera.backgroundColor = backgroundGradient.Evaluate(1f);
                 globalLight.color = lightGradient.Evaluate(1f);
                 currentSavedAcorn += currentAcorn;
+
+                SoundManager.Instance.PlayBGM(2);
+
                 ShowHomeInside();
                 await foreground.DOFade(0f, 3f).AsyncWaitForCompletion();
 
@@ -187,6 +192,8 @@ namespace Ingames
                 {
                     onSurvived.Event.Raise();
                     await UniTask.Delay(3000);
+                    SoundManager.Instance.StopBGM();
+
                     await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
                 }
 
@@ -228,7 +235,7 @@ namespace Ingames
             onDie?.Event?.Raise();
             SoundManager.Instance.StopBGM();
             await UniTask.Delay(3000);
-            SoundManager.Instance.PlayDieBGM();
+            SoundManager.Instance.PlayBGM(1);
             //Á×´Â ¿¬Ãâ
             await UniTask.Delay((int)(deathDelay * 1000f));
             Debug.Log("Fin");
@@ -245,7 +252,7 @@ namespace Ingames
             onDie?.Event?.Raise();
             SoundManager.Instance.StopBGM();
             await UniTask.Delay(3000);
-            SoundManager.Instance.PlayDieBGM();
+            SoundManager.Instance.PlayBGM(1);
             //Á×´Â ¿¬Ãâ
             await UniTask.Delay((int)(deathDelay * 1000f));
             Debug.Log("Fin");
@@ -276,7 +283,15 @@ namespace Ingames
             globalLight.color = endingLightColor;
 
             pointLight.pointLightInnerRadius = minRadius;
+            SoundManager.Instance.PlayBGM(3);
             await foreground.DOFade(0f, duration).OnUpdate(() => pointLight.pointLightInnerRadius += (maxRadius - minRadius) / duration * Time.deltaTime).AsyncWaitForCompletion();
+
+            SoundManager.Instance.StopBGM();
+            await foreground.DOFade(1f, duration).AsyncWaitForCompletion();
+
+            character.Value.transform.position = endingOutsideHomeWaypoint.position;
+            onStartFinalEnding?.Event?.Raise();
+
         }
 
         public async void ShowAcornUI(int nextAcornCount)
