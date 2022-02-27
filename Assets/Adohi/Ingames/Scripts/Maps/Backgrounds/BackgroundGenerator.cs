@@ -8,6 +8,8 @@ namespace Ingames
     {
         public class BackgroundGenerator : MonoBehaviour
         {
+            public int seed;
+
             public Transform treeParent;
             public List<TreeData> treeObjectData;
             public Transform fogParent;
@@ -22,6 +24,8 @@ namespace Ingames
 
             public void Generate()
             {
+                Random.InitState(seed);
+
                 GenerateTrees();
                 GenerateFog();
             }
@@ -44,7 +48,7 @@ namespace Ingames
 
                     parent.transform.SetParent(treeParent);
 
-                    var currentWidth = 0f;
+                    var currentWidth = -MapManager.Instance.mapWidth * 0.5f;
 
                     parent.camera = Camera.main;
 
@@ -52,7 +56,7 @@ namespace Ingames
 
                     parent.gameObject.SetActive(true);
 
-                    while (currentWidth < MapManager.Instance.mapWidth)
+                    while (currentWidth < MapManager.Instance.mapWidth * 0.5f)
                     {
                         var width = Random.Range(treeData.minTreeInterval, treeData.maxTreeInterval);
 
@@ -72,11 +76,14 @@ namespace Ingames
 
                         spawnedTree.transform.localScale = scale;
 
-                        var renderer = spawnedTree.GetComponent<SpriteRenderer>();
+                        var renderers = spawnedTree.GetComponentsInChildren<SpriteRenderer>();
 
-                        renderer.color = treeData.overlayColor;
+                        foreach (var renderer in renderers)
+                        {
+                            renderer.color = treeData.overlayColor;
 
-                        renderer.flipX = isFlip;
+                            renderer.flipX = isFlip;
+                        }
 
                         spawnedTree.SetActive(true);
                     }
