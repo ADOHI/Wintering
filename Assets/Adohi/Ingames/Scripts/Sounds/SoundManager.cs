@@ -89,6 +89,18 @@ namespace Ingames
 
         }
 
+        public void StopSFX()
+        {
+
+            foreach (var sfx in sfxs)
+            {
+                if (sfx.isPlaying)
+                {
+                    sfx.Stop();
+                }
+            }
+
+        }
 
         public void Fade(AudioSource audioSource, float fadeValue, float fadeDuration, bool isStop = false)
         {

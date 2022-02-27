@@ -168,7 +168,7 @@ namespace Ingames
         public async UniTask EndDay(bool isSuccess)
         {
             onDayEnd.Event.Raise();
-;
+;           SoundManager.Instance.StopSFX();
             if (isSuccess)
             {
                 SoundManager.Instance.StopBGM();
